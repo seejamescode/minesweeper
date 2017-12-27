@@ -33,13 +33,15 @@ const Container = styled.div`
   display: grid;
   grid-template:
     "game info"
+    "game newGame"
     / minmax(auto, 100vh) minmax(100px, auto);
 
   @media (orientation: portrait) {
     align-content: space-between;
     grid-template:
       "info" auto
-      "game" 100vw;
+      "game" 100vw
+      "newGame" auto;
     min-height: 100vh;
   }
 `;
@@ -97,6 +99,20 @@ const Info = styled.section`
   }
 `;
 
+const NewGame = styled.section`
+  box-sizing: border-box;
+  grid-area: newGame;
+  padding: 2rem;
+
+  > * {
+    margin-top: 0;
+  }
+
+  @media (orientation: portrait) {
+    padding: 1rem;
+  }
+`;
+
 const Revealed = styled.div`
   background: ${props =>
     props.value === "X" && props.gameOver ? "#E60000" : null};
@@ -113,7 +129,7 @@ const Revealed = styled.div`
 
 class Minesweeper extends Component {
   static defaultProps = {
-    level: 3
+    level: 10
   };
 
   state = {
@@ -121,6 +137,7 @@ class Minesweeper extends Component {
     gameOver: false,
     gameWon: false,
     level: this.props.level,
+    levelNew: this.props.level,
     minesFlagged: 0,
     status: "So far, so good.",
     timer: 0,
@@ -170,6 +187,10 @@ class Minesweeper extends Component {
   componentWillUnmount() {
     clearInterval(this.timer);
   }
+
+  changeLevel = e => {
+    this.setState({ levelNew: parseInt(e.target.value, 10) });
+  };
 
   clearZeros = location => {
     const answers = this.state.answers;
@@ -277,6 +298,20 @@ class Minesweeper extends Component {
     }
   };
 
+  startGame = e => {
+    e.preventDefault();
+    this.setState({
+      answers: newGame(this.state.levelNew),
+      gameOver: false,
+      gameWon: false,
+      level: this.state.levelNew,
+      minesFlagged: 0,
+      status: "So far, so good.",
+      timer: 0,
+      totalMines: Math.ceil(Math.pow(this.state.levelNew, 2) / 8)
+    });
+  };
+
   tick = () => {
     this.setState({ timer: this.state.timer + 1 });
   };
@@ -286,12 +321,34 @@ class Minesweeper extends Component {
       <Container>
         <Info>
           <h1>Minesweeper</h1>
+          <p>Level: {this.state.level}</p>
           <p>
             Mines Remaining: {this.state.totalMines - this.state.minesFlagged}
           </p>
           <p>Time: {this.state.timer}s</p>
           <p>{this.state.status}</p>
         </Info>
+        <NewGame>
+          <form onSubmit={this.startGame}>
+            <h2>New Game</h2>
+            <label>
+              <input
+                min="3"
+                max="50"
+                onChange={this.changeLevel}
+                type="range"
+                defaultValue={this.state.levelNew}
+              />
+              <br />
+              Level: {this.state.levelNew}
+            </label>
+            <br />
+            <br />
+            <button type="submit" value="Submit">
+              New Game
+            </button>
+          </form>
+        </NewGame>
         <Game>
           <Grid level={this.state.level}>
             {this.state.answers.map((row, rowIndex) =>
