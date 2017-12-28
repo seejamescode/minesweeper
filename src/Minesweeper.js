@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import styled, { injectGlobal } from "styled-components";
 import newGame from "./newGame";
+import surroundings from "./surroundings";
 
 injectGlobal`
   body {
@@ -127,20 +128,25 @@ const Revealed = styled.div`
   }
 `;
 
+const initialState = {
+  gameOver: false,
+  gameWon: false,
+  minesFlagged: 0,
+  turn: 0,
+  status: "So far, so good.",
+  timer: 0
+};
+
 class Minesweeper extends Component {
   static defaultProps = {
-    level: 10
+    level: 50
   };
 
   state = {
+    ...initialState,
     answers: newGame(this.props.level),
-    gameOver: false,
-    gameWon: false,
     level: this.props.level,
     levelNew: this.props.level,
-    minesFlagged: 0,
-    status: "So far, so good.",
-    timer: 0,
     totalMines: Math.ceil(Math.pow(this.props.level, 2) / 8)
   };
 
@@ -149,38 +155,36 @@ class Minesweeper extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    if (!prevState.gameOver && this.state.gameOver) {
-      this.setState({ status: "Game over. Try again?" });
-    }
+    if (this.state.turn === prevState.turn) {
+      let count = Math.pow(this.state.level, 2) - this.state.totalMines;
 
-    let count = Math.pow(this.state.level, 2) - this.state.totalMines;
+      let minesFlagged = 0;
+      for (let i = 0; i < this.state.answers.length; i++) {
+        for (let j = 0; j < this.state.answers[i].length; j++) {
+          if (
+            this.state.answers[i][j].revealed &&
+            this.state.answers[i][j].value !== "X"
+          ) {
+            count = count - 1;
+          }
 
-    let minesFlagged = 0;
-    for (let i = 0; i < this.state.answers.length; i++) {
-      for (let j = 0; j < this.state.answers[i].length; j++) {
-        if (
-          this.state.answers[i][j].revealed &&
-          this.state.answers[i][j].value !== "X"
-        ) {
-          count = count - 1;
-        }
-
-        if (this.state.answers[i][j].flagged) {
-          minesFlagged = minesFlagged + 1;
+          if (this.state.answers[i][j].flagged) {
+            minesFlagged = minesFlagged + 1;
+          }
         }
       }
-    }
 
-    if (
-      minesFlagged !== this.state.minesFlagged &&
-      prevState.minesFlagged !== this.state.minesFlagged
-    ) {
-      this.setState({ minesFlagged });
-    }
+      if (
+        minesFlagged !== this.state.minesFlagged &&
+        prevState.minesFlagged !== this.state.minesFlagged
+      ) {
+        this.setState({ minesFlagged });
+      }
 
-    if (count === 0 && !prevState.gameWon) {
-      clearInterval(this.timer);
-      this.setState({ gameWon: true, status: "You won this one!" });
+      if (count === 0 && !prevState.gameWon) {
+        clearInterval(this.timer);
+        this.setState({ gameWon: true, status: "You won this one!" });
+      }
     }
   }
 
@@ -190,63 +194,6 @@ class Minesweeper extends Component {
 
   changeLevel = e => {
     this.setState({ levelNew: parseInt(e.target.value, 10) });
-  };
-
-  clearZeros = location => {
-    const answers = this.state.answers;
-    const isBottom = answers[location[0] + 1] === undefined;
-    const isLeft = answers[location[0]][location[1] - 1] === undefined;
-    const isRight = answers[location[0]][location[1] + 1] === undefined;
-    const isTop = answers[location[0] - 1] === undefined;
-
-    if (!isBottom) {
-      if (answers[location[0] + 1][location[1]].value !== "X") {
-        this.reveal([location[0] + 1, location[1]]);
-      }
-      if (
-        !isLeft &&
-        answers[location[0] + 1][location[1] - 1].value !== "" &&
-        answers[location[0] + 1][location[1] - 1].value !== "X"
-      ) {
-        this.reveal([location[0] + 1, location[1] - 1]);
-      }
-      if (
-        !isRight &&
-        answers[location[0] + 1][location[1] + 1].value !== "" &&
-        answers[location[0] + 1][location[1] + 1].value !== "X"
-      ) {
-        this.reveal([location[0] + 1, location[1] + 1]);
-      }
-    }
-    if (!isLeft) {
-      if (answers[location[0]][location[1] - 1].value !== "X") {
-        this.reveal([location[0], location[1] - 1]);
-      }
-    }
-    if (!isRight) {
-      if (answers[location[0]][location[1] + 1].value !== "X") {
-        this.reveal([location[0], location[1] + 1]);
-      }
-    }
-    if (!isTop) {
-      if (answers[location[0] - 1][location[1]].value !== "X") {
-        this.reveal([location[0] - 1, location[1]]);
-      }
-      if (
-        !isLeft &&
-        answers[location[0] - 1][location[1] - 1].value !== "" &&
-        answers[location[0] - 1][location[1] - 1].value !== "X"
-      ) {
-        this.reveal([location[0] - 1, location[1] - 1]);
-      }
-      if (
-        !isRight &&
-        answers[location[0] - 1][location[1] + 1].value !== "" &&
-        answers[location[0] - 1][location[1] + 1].value !== "X"
-      ) {
-        this.reveal([location[0] - 1, location[1] + 1]);
-      }
-    }
   };
 
   handleTurn = e => {
@@ -272,42 +219,61 @@ class Minesweeper extends Component {
     window.addEventListener(eventType, doneEvent => {
       if (doneEvent.timeStamp - startTime < longPress) {
         clearTimeout(flagLocation);
-        this.reveal(location);
+
+        this.setState({
+          ...this.reveal(this.state.answers, location),
+          turn: this.state.turn + 1
+        });
       }
       window.removeEventListener(eventType, function() {});
     });
   };
 
-  reveal = location => {
-    let answers = this.state.answers;
-    const oldItem = answers[location[0]][location[1]];
-    if (!oldItem.revealed) {
-      const value = oldItem.value;
-      answers[location[0]][location[1]] = {
-        revealed: true,
-        value
-      };
-      if (value === "X") {
-        clearInterval(this.timer);
-      }
-      this.setState({ answers: answers, gameOver: value === "X" }, () => {
-        if (value === "") {
-          this.clearZeros(location);
+  reveal = (answers, location) => {
+    let newAnswers = answers;
+    const item = newAnswers[location[0]][location[1]];
+    newAnswers[location[0]][location[1]] = {
+      ...item,
+      revealed: true
+    };
+
+    if (item.value === "") {
+      let adjacents = surroundings(answers, location[0], location[1]);
+      Object.values(adjacents).forEach(cell => {
+        if (cell.value !== undefined && cell.value !== "X") {
+          if (cell.value === "" && !cell.revealed) {
+            newAnswers = this.reveal(newAnswers, [cell.y, cell.x]).answers;
+          }
+
+          newAnswers[cell.y][cell.x] = {
+            ...cell,
+            revealed: true
+          };
         }
       });
     }
+
+    let gameOver = {};
+    if (item.value === "X") {
+      clearInterval(this.timer);
+      gameOver = {
+        gameOver: true,
+        status: "Game over. Try again?"
+      };
+    }
+
+    return {
+      answers,
+      ...gameOver
+    };
   };
 
   startGame = e => {
     e.preventDefault();
     this.setState({
-      answers: newGame(this.state.levelNew),
-      gameOver: false,
-      gameWon: false,
+      ...initialState,
+      answers: newGame(this.props.level),
       level: this.state.levelNew,
-      minesFlagged: 0,
-      status: "So far, so good.",
-      timer: 0,
       totalMines: Math.ceil(Math.pow(this.state.levelNew, 2) / 8)
     });
   };
