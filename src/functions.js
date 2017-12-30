@@ -79,7 +79,35 @@ export function newGame(level = 10) {
   );
 }
 
-export function surroundings(matrix, y, x) {
+export function reveal(answers, location) {
+  let newAnswers = answers;
+  const item = newAnswers[location[0]][location[1]];
+  newAnswers[location[0]][location[1]] = {
+    ...item,
+    revealed: true
+  };
+
+  if (item.value === "") {
+    let adjacents = surroundings(answers, location[0], location[1]);
+    Object.values(adjacents).forEach(cell => {
+      if (cell.value !== undefined && cell.value !== "X") {
+        if (cell.value === "" && !cell.revealed) {
+          newAnswers = reveal(newAnswers, [cell.y, cell.x]);
+        }
+
+        newAnswers[cell.y][cell.x] = {
+          ...cell,
+          flagged: false,
+          revealed: true
+        };
+      }
+    });
+  }
+
+  return newAnswers;
+}
+
+function surroundings(matrix, y, x) {
   return {
     up: getCell(matrix, y - 1, x),
     upRight: getCell(matrix, y - 1, x + 1),

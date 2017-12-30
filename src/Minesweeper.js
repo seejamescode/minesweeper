@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import styled, { injectGlobal } from "styled-components";
-import { newGame, surroundings } from "./functions";
+import { newGame, reveal } from "./functions";
 import {
   InputCheckbox,
   InputRange,
@@ -8,6 +8,7 @@ import {
   InputTab,
   InputTabs
 } from "./inputs";
+import { celebration, shake } from "./keyframes";
 
 injectGlobal`
   body {
@@ -49,6 +50,7 @@ const Container = styled.div`
       "info" auto
       "game" 100vw;
     height: 100vh;
+    overflow: hidden;
   }
 `;
 
@@ -63,9 +65,14 @@ const Content = styled.div`
 `;
 
 const Game = styled.section`
+  animation: ${props => (props.gameOver ? shake : null)} 0.82s
+    cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+  backface-visibility: hidden;
   grid-area: game;
   position: relative;
   max-width: 100vh;
+  perspective: 1000px;
+  transform: translate3d(0, 0, 0);
 
   :after {
     content: "";
@@ -75,7 +82,12 @@ const Game = styled.section`
 `;
 
 const Grid = styled.div`
-  background: white;
+  animation: ${celebration} 6s ease infinite;
+  background: ${props =>
+    props.gameWon
+      ? "linear-gradient(230deg, #ee3490, #fbf007, #35fd0b, #0085fe, #9d3cd3, #ee3490, #fbf007, #35fd0b, #0085fe, #9d3cd3)"
+      : "white"};
+  background-size: 2000% 2000%;
   border: 1px solid white;
   box-sizing: border-box;
   display: grid;
@@ -101,7 +113,7 @@ const Info = styled.div`
   }
 
   @media (orientation: portrait) {
-    overflow-y: scroll;
+    overflow-y: auto;
   }
 `;
 
@@ -123,9 +135,6 @@ const Section = styled.section`
   display: ${props => (!props.show ? "none" : null)};
   max-width: 14.5rem;
   padding: 1rem;
-  @media (orientation: portrait) {
-    overflow-y: scroll;
-  }
 `;
 
 const Title = styled.h1`
@@ -196,67 +205,45 @@ class Minesweeper extends Component {
     if (this.state.flagMode) {
       this.handleFlag(location);
     } else {
-      const results = this.reveal(this.state.answers, location);
+      const answers = reveal(this.state.answers, location);
 
-      // Check if game is won
+      // Check if game is won or lost
       let count = Math.pow(this.state.level, 2) - this.state.totalMines;
       let gameWon = {};
-      for (let i = 0; i < this.state.answers.length; i++) {
-        for (let j = 0; j < this.state.answers[i].length; j++) {
-          count = results.answers[i][j].revealed ? count - 1 : count;
+      let gameOver = {};
+      let current = {};
+      for (let i = 0; i < answers.length; i++) {
+        for (let j = 0; j < answers.length; j++) {
+          current = answers[i][j];
+          count = current.revealed ? count - 1 : count;
+          if (current.revealed && current.value === "X") {
+            clearInterval(this.timer);
+            gameOver = {
+              gameOver: true,
+              status: (
+                <React.Fragment>
+                  Game over.<br />
+                  <br />
+                  <InputSubmit onClick={this.startGame}>Try again?</InputSubmit>
+                </React.Fragment>
+              )
+            };
+          }
         }
       }
+
       if (count === 0) {
         clearInterval(this.timer);
         gameWon = { gameWon: true, status: "You won this one!" };
       }
 
       this.setState({
-        ...results,
+        answers,
+        ...gameOver,
         ...gameWon,
         turn: this.state.turn + 1
       });
     }
-  };
-
-  reveal = (answers, location) => {
-    let newAnswers = answers;
-    const item = newAnswers[location[0]][location[1]];
-    newAnswers[location[0]][location[1]] = {
-      ...item,
-      revealed: true
-    };
-
-    if (item.value === "") {
-      let adjacents = surroundings(answers, location[0], location[1]);
-      Object.values(adjacents).forEach(cell => {
-        if (cell.value !== undefined && cell.value !== "X") {
-          if (cell.value === "" && !cell.revealed) {
-            newAnswers = this.reveal(newAnswers, [cell.y, cell.x]).answers;
-          }
-
-          newAnswers[cell.y][cell.x] = {
-            ...cell,
-            flagged: false,
-            revealed: true
-          };
-        }
-      });
-    }
-
-    let gameOver = {};
-    if (item.value === "X") {
-      clearInterval(this.timer);
-      gameOver = {
-        gameOver: true,
-        status: "Game over. Try again?"
-      };
-    }
-
-    return {
-      answers,
-      ...gameOver
-    };
   };
 
   startGame = e => {
@@ -267,6 +254,7 @@ class Minesweeper extends Component {
       level: this.state.levelNew,
       totalMines: Math.ceil(Math.pow(this.state.levelNew, 2) / 8)
     });
+    this.timer = setInterval(this.tick, 1000);
   };
 
   tick = () => {
@@ -316,7 +304,6 @@ class Minesweeper extends Component {
               Mines Remaining: {this.state.totalMines - this.state.minesFlagged}
             </p>
             <p>Time: {this.state.timer}s</p>
-            <p>{this.state.status}</p>
             <InputCheckbox>
               Flag Mode
               <input
@@ -326,6 +313,8 @@ class Minesweeper extends Component {
               />
               <div>!</div>
             </InputCheckbox>
+            <br />
+            <p>{this.state.status}</p>
           </Section>
           <Section show={this.state.tab === 1}>
             <label>
@@ -344,9 +333,12 @@ class Minesweeper extends Component {
               Start
             </InputSubmit>
           </Section>
+          <Section show={this.state.tab === 2}>
+            <p>Hold your horses. Scoreboards are coming soon.</p>
+          </Section>
         </Info>
-        <Game>
-          <Grid level={this.state.level}>
+        <Game gameOver={this.state.gameOver}>
+          <Grid gameWon={this.state.gameWon} level={this.state.level}>
             {this.state.answers.map((row, rowIndex) =>
               row.map(
                 (item, colIndex) =>
