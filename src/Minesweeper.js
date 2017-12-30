@@ -232,7 +232,7 @@ class Minesweeper extends Component {
         }
       }
 
-      if (count === 0) {
+      if (count === 0 && gameOver.gameOver === undefined) {
         clearInterval(this.timer);
         gameWon = { gameWon: true, status: "You won this one!" };
       }
