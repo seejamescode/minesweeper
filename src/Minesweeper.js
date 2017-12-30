@@ -1,7 +1,13 @@
 import React, { Component } from "react";
 import styled, { injectGlobal } from "styled-components";
-import newGame from "./newGame";
-import surroundings from "./surroundings";
+import { newGame, surroundings } from "./functions";
+import {
+  InputCheckbox,
+  InputRange,
+  InputSubmit,
+  InputTab,
+  InputTabs
+} from "./inputs";
 
 injectGlobal`
   body {
@@ -35,15 +41,14 @@ const Container = styled.div`
   grid-template:
     "game info"
     "game newGame"
-    / minmax(auto, 100vh) minmax(100px, auto);
+    / minmax(auto, 100vh) 14.5rem;
 
   @media (orientation: portrait) {
     align-content: space-between;
     grid-template:
       "info" auto
-      "game" 100vw
-      "newGame" auto;
-    min-height: 100vh;
+      "game" 100vw;
+    height: 100vh;
   }
 `;
 
@@ -52,6 +57,7 @@ const Content = styled.div`
   display: flex;
   height: 100%;
   justify-content: center;
+  user-select: none;
   position: absolute;
   width: 100%;
 `;
@@ -86,31 +92,16 @@ const Grid = styled.div`
   }
 `;
 
-const Info = styled.section`
+const Info = styled.div`
   box-sizing: border-box;
   grid-area: info;
-  padding: 2rem;
 
-  > * {
+  * {
     margin-top: 0;
   }
 
   @media (orientation: portrait) {
-    padding: 1rem;
-  }
-`;
-
-const NewGame = styled.section`
-  box-sizing: border-box;
-  grid-area: newGame;
-  padding: 2rem;
-
-  > * {
-    margin-top: 0;
-  }
-
-  @media (orientation: portrait) {
-    padding: 1rem;
+    overflow-y: scroll;
   }
 `;
 
@@ -128,24 +119,36 @@ const Revealed = styled.div`
   }
 `;
 
-const initialState = {
-  gameOver: false,
-  gameWon: false,
-  minesFlagged: 0,
-  turn: 0,
-  status: "So far, so good.",
-  timer: 0
-};
+const Section = styled.section`
+  display: ${props => (!props.show ? "none" : null)};
+  max-width: 14.5rem;
+  padding: 1rem;
+  @media (orientation: portrait) {
+    overflow-y: scroll;
+  }
+`;
+
+const Title = styled.h1`
+  margin: 0;
+  padding: 1rem;
+`;
 
 class Minesweeper extends Component {
   static defaultProps = {
-    level: 50
+    flagMode: false,
+    gameOver: false,
+    gameWon: false,
+    level: 10,
+    minesFlagged: 0,
+    tab: 0,
+    turn: 0,
+    status: "So far, so good.",
+    timer: 0
   };
 
   state = {
-    ...initialState,
+    ...this.props,
     answers: newGame(this.props.level),
-    level: this.props.level,
     levelNew: this.props.level,
     totalMines: Math.ceil(Math.pow(this.props.level, 2) / 8)
   };
@@ -154,79 +157,66 @@ class Minesweeper extends Component {
     this.timer = setInterval(this.tick, 1000);
   }
 
-  componentDidUpdate(prevProps, prevState) {
-    if (this.state.turn === prevState.turn) {
-      let count = Math.pow(this.state.level, 2) - this.state.totalMines;
-
-      let minesFlagged = 0;
-      for (let i = 0; i < this.state.answers.length; i++) {
-        for (let j = 0; j < this.state.answers[i].length; j++) {
-          if (
-            this.state.answers[i][j].revealed &&
-            this.state.answers[i][j].value !== "X"
-          ) {
-            count = count - 1;
-          }
-
-          if (this.state.answers[i][j].flagged) {
-            minesFlagged = minesFlagged + 1;
-          }
-        }
-      }
-
-      if (
-        minesFlagged !== this.state.minesFlagged &&
-        prevState.minesFlagged !== this.state.minesFlagged
-      ) {
-        this.setState({ minesFlagged });
-      }
-
-      if (count === 0 && !prevState.gameWon) {
-        clearInterval(this.timer);
-        this.setState({ gameWon: true, status: "You won this one!" });
-      }
-    }
-  }
-
   componentWillUnmount() {
     clearInterval(this.timer);
   }
+
+  changeFlagMode = e => {
+    this.setState({ flagMode: !this.state.flagMode });
+  };
 
   changeLevel = e => {
     this.setState({ levelNew: parseInt(e.target.value, 10) });
   };
 
+  changeTab = e => {
+    this.setState({ tab: parseInt(e.target.value, 10) });
+  };
+
+  handleFlag = location => {
+    let flaggedAnswers = this.state.answers;
+    flaggedAnswers[location[0]][location[1]] = {
+      ...flaggedAnswers[location[0]][location[1]],
+      flagged: !flaggedAnswers[location[0]][location[1]].flagged
+    };
+    this.setState({
+      answers: flaggedAnswers,
+      minesFlagged: flaggedAnswers[location[0]][location[1]].flagged
+        ? this.state.minesFlagged + 1
+        : this.state.minesFlagged - 1
+    });
+  };
+
   handleTurn = e => {
-    const longPress = 500;
     const location = e.target
       .getAttribute("value")
       .split(",")
       .map(num => parseInt(num, 10));
-    const startTime = e.timeStamp;
-    const flagLocation = setTimeout(() => {
-      let flaggedAnswers = this.state.answers;
-      flaggedAnswers[location[0]][location[1]] = {
-        ...flaggedAnswers[location[0]][location[1]],
-        flagged: !flaggedAnswers[location[0]][location[1]].flagged
-      };
-      this.setState({
-        answers: flaggedAnswers
-      });
-    }, longPress);
 
-    const eventType = e.type === "mousedown" ? "mouseup" : "touchend";
+    if (this.state.flagMode) {
+      this.handleFlag(location);
+    } else {
+      const results = this.reveal(this.state.answers, location);
 
-    window.addEventListener(eventType, doneEvent => {
-      if (doneEvent.timeStamp - startTime < longPress) {
-        clearTimeout(flagLocation);
-
-        this.setState({
-          ...this.reveal(this.state.answers, location),
-          turn: this.state.turn + 1
-        });
+      // Check if game is won
+      let count = Math.pow(this.state.level, 2) - this.state.totalMines;
+      let gameWon = {};
+      for (let i = 0; i < this.state.answers.length; i++) {
+        for (let j = 0; j < this.state.answers[i].length; j++) {
+          count = results.answers[i][j].revealed ? count - 1 : count;
+        }
       }
-      window.removeEventListener(eventType, function() {});
-    });
+      if (count === 0) {
+        clearInterval(this.timer);
+        gameWon = { gameWon: true, status: "You won this one!" };
+      }
+
+      this.setState({
+        ...results,
+        ...gameWon,
+        turn: this.state.turn + 1
+      });
+    }
   };
 
   reveal = (answers, location) => {
@@ -247,6 +237,7 @@ class Minesweeper extends Component {
 
           newAnswers[cell.y][cell.x] = {
             ...cell,
+            flagged: false,
             revealed: true
           };
         }
@@ -271,8 +262,8 @@ class Minesweeper extends Component {
   startGame = e => {
     e.preventDefault();
     this.setState({
-      ...initialState,
-      answers: newGame(this.props.level),
+      ...this.props,
+      answers: newGame(this.state.levelNew),
       level: this.state.levelNew,
       totalMines: Math.ceil(Math.pow(this.state.levelNew, 2) / 8)
     });
@@ -286,35 +277,74 @@ class Minesweeper extends Component {
     return (
       <Container>
         <Info>
-          <h1>Minesweeper</h1>
-          <p>Level: {this.state.level}</p>
-          <p>
-            Mines Remaining: {this.state.totalMines - this.state.minesFlagged}
-          </p>
-          <p>Time: {this.state.timer}s</p>
-          <p>{this.state.status}</p>
-        </Info>
-        <NewGame>
-          <form onSubmit={this.startGame}>
-            <h2>New Game</h2>
-            <label>
+          <Title>Minesweeper</Title>
+          <InputTabs>
+            <InputTab checked={this.state.tab === 0}>
               <input
+                checked={this.state.tab === 0}
+                name="tab"
+                onChange={this.changeTab}
+                tab={this.state.tab}
+                type="radio"
+                value={0}
+              />Game
+            </InputTab>
+            <InputTab checked={this.state.tab === 1}>
+              <input
+                checked={this.state.tab === 1}
+                name="tab"
+                onChange={this.changeTab}
+                tab={this.state.tab}
+                type="radio"
+                value={1}
+              />New
+            </InputTab>
+            <InputTab checked={this.state.tab === 2}>
+              <input
+                checked={this.state.tab === 2}
+                name="tab"
+                onChange={this.changeTab}
+                tab={this.state.tab}
+                type="radio"
+                value={2}
+              />Scores
+            </InputTab>
+          </InputTabs>
+          <Section show={this.state.tab === 0}>
+            <p>Level: {this.state.level}</p>
+            <p>
+              Mines Remaining: {this.state.totalMines - this.state.minesFlagged}
+            </p>
+            <p>Time: {this.state.timer}s</p>
+            <p>{this.state.status}</p>
+            <InputCheckbox>
+              Flag Mode
+              <input
+                onChange={this.changeFlagMode}
+                type="checkbox"
+                value={this.state.flagMode}
+              />
+              <div>!</div>
+            </InputCheckbox>
+          </Section>
+          <Section show={this.state.tab === 1}>
+            <label>
+              <p>Level: {this.state.levelNew}</p>
+              <InputRange
                 min="3"
                 max="50"
                 onChange={this.changeLevel}
                 type="range"
                 defaultValue={this.state.levelNew}
               />
-              <br />
-              Level: {this.state.levelNew}
             </label>
             <br />
             <br />
-            <button type="submit" value="Submit">
-              New Game
-            </button>
-          </form>
-        </NewGame>
+            <InputSubmit onClick={this.startGame} value="">
+              Start
+            </InputSubmit>
+          </Section>
+        </Info>
         <Game>
           <Grid level={this.state.level}>
             {this.state.answers.map((row, rowIndex) =>
@@ -337,8 +367,7 @@ class Minesweeper extends Component {
                     <Button
                       disabled={this.state.gameOver}
                       key={`${rowIndex}-${colIndex}`}
-                      onMouseDown={this.handleTurn}
-                      onTouchStart={this.handleTurn}
+                      onClick={this.handleTurn}
                       value={[rowIndex, colIndex]}
                     >
                       <Content value={[rowIndex, colIndex]}>
