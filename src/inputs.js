@@ -1,5 +1,21 @@
 import styled from "styled-components";
 
+export const InputButton = styled.button`
+  background: none;
+  color: inherit;
+  border: 2px solid #fff;
+  padding: 0.5rem 1rem;
+`;
+
+export const InputButtonInline = styled.button`
+  background: inherit;
+  border: none;
+  color: inherit;
+  font: inherit;
+  padding: 0;
+  text-decoration: underline;
+`;
+
 export const InputCheckbox = styled.label`
   display: block;
   position: relative;
@@ -123,18 +139,12 @@ export const InputRange = styled.input`
   }
 `;
 
-export const InputSubmit = styled.button`
-  background: none;
-  color: inherit;
-  border: 2px solid #fff;
-  padding: 0.5rem 1rem;
-`;
-
 export const InputTab = styled.label`
   background: ${props => (props.checked ? "#fff" : null)};
-  border-bottom: 2px solid #fff;
   color: ${props => (props.checked ? "#000" : null)};
+  display: ${props => (props.doNotDisplay ? "none" : null)};
   flex: 1;
+  max-width: 8rem;
   padding: 0.5rem;
 
   :nth-last-child(1) {
@@ -148,5 +158,6 @@ export const InputTab = styled.label`
 `;
 
 export const InputTabs = styled.form`
+  border-bottom: 2px solid #fff;
   display: flex;
 `;

@@ -1,17 +1,49 @@
 {
   "name": "minesweeper",
-  "version": "0.1.0",
-  "dependencies": {},
+  "license": "MIT",
+  "version": "1.0.0",
+  "dependencies": {
+    "compression": "^1.6.2",
+    "connect-ensure-login": "^0.1.1",
+    "express": "^4.14.1",
+    "express-session": "^1.15.6",
+    "mongoose": "^5.0.0-rc0",
+    "mongoose-paginate": "^5.0.3",
+    "passport": "^0.4.0",
+    "passport-twitter": "^1.0.4",
+    "request": "^2.79.0"
+  },
   "devDependencies": {
-    "react-scripts": "1.0.17",
+    "babel-cli": "^6.26.0",
+    "babel-core": "^6.6.x",
+    "babel-preset-env": "^1.6.1",
+    "babel-watch": "^2.0.7",
+    "concurrently": "^3.5.1",
+    "intersection-observer": "^0.5.0",
     "react": "^16.2.0",
     "react-dom": "^16.2.0",
+    "react-intersection-observer": "^3.0.0",
+    "react-scripts": "1.0.17",
     "styled-components": "^2.4.0"
   },
+  "proxy": {
+    "/": {
+      "target": "http://192.168.0.12:8081",
+      "pathRewrite": { "^/proxy": "" },
+      "changeOrigin": true
+    }
+  },
   "scripts": {
-    "alias": "cd ./build && now alias && cd ../",
-    "build": "react-scripts build",
-    "deploy": "yarn build && now ./build && yarn alias",
-    "start": "react-scripts start"
+    "build":
+      "react-scripts build && cp ./.env.prod.json ./build && NODE_ENV=production npx babel --out-file ./build/server.js < ./src/server.js --presets=env",
+    "deploy":
+      "yarn build && now -e NODE_ENV=\"production\" && now alias && now scale minesweeper.now.sh 1 1",
+    "now-build": "true",
+    "now-start": "PORT=8081 NODE_ENV=production node build/server.js",
+    "server": "PORT=8081 babel-watch ./src/server.js",
+    "start": "concurrently \"react-scripts start\" \"yarn server\""
+  },
+  "babel": {
+    "presets": ["env"]
   }
 }

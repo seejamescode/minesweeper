@@ -1,0 +1,4 @@
+{
+  "alias": ["minesweeper"],
+  "files": ["keys/keys.json", "build"]
+}
