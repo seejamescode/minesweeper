@@ -11,7 +11,8 @@
     "mongoose-paginate": "^5.0.3",
     "passport": "^0.4.0",
     "passport-twitter": "^1.0.4",
-    "request": "^2.79.0"
+    "request": "^2.79.0",
+    "session-memory-store": "^0.2.2"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
@@ -29,21 +30,23 @@
   "proxy": {
     "/": {
       "target": "http://192.168.0.12:8081",
-      "pathRewrite": { "^/proxy": "" },
+      "pathRewrite": {
+        "^/proxy": ""
+      },
       "changeOrigin": true
     }
   },
   "scripts": {
-    "build":
-      "react-scripts build && cp ./.env.prod.json ./build && NODE_ENV=production npx babel --out-file ./build/server.js < ./src/server.js --presets=env",
-    "deploy":
-      "yarn build && now -e NODE_ENV=\"production\" && now alias && now scale minesweeper.now.sh 1 1",
+    "build": "react-scripts build && cp ./.env.prod.json ./build && NODE_ENV=production npx babel --out-file ./build/server.js < ./src/server.js --presets=env",
+    "deploy": "yarn build && now -e NODE_ENV=\"production\" && now alias && now scale minesweeper.now.sh 1 1",
     "now-build": "true",
     "now-start": "PORT=8081 NODE_ENV=production node build/server.js",
     "server": "PORT=8081 babel-watch ./src/server.js",
     "start": "concurrently \"react-scripts start\" \"yarn server\""
   },
   "babel": {
-    "presets": ["env"]
+    "presets": [
+      "env"
+    ]
   }
 }

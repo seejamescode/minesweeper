@@ -177,7 +177,8 @@ export default class Minesweeper extends Component {
     tab: 0,
     turn: 0,
     status: "So far, so good.",
-    timer: 0
+    time: 0,
+    timeFinal: 0
   };
 
   state = {
@@ -273,7 +274,12 @@ export default class Minesweeper extends Component {
 
       if (count === 0 && gameOver.gameOver === undefined) {
         clearInterval(this.timer);
-        gameWon = { gameWon: true, tab: 3, status: "You won this one!" };
+        gameWon = {
+          gameWon: true,
+          tab: 3,
+          status: "You won this one!",
+          timeFinal: this.state.time
+        };
       }
 
       this.setState({
@@ -298,7 +304,7 @@ export default class Minesweeper extends Component {
   };
 
   tick = () => {
-    this.setState({ timer: this.state.timer + 1 });
+    this.setState({ time: this.state.time + 1 });
   };
 
   render() {
@@ -311,7 +317,9 @@ export default class Minesweeper extends Component {
               <p>
                 Level: {this.state.level} / Flags Left:{" "}
                 {this.state.totalMines - this.state.minesFlagged} / Score:{" "}
-                {this.state.timer}s
+                {this.state.timeFinal > 0
+                  ? this.state.timeFinal
+                  : this.state.time}s
                 <br />
                 <br />
                 {this.state.status}
@@ -400,7 +408,7 @@ export default class Minesweeper extends Component {
               handle?
               <br />
               <br />
-              <a href={`/login/${this.state.level}/${this.state.timer}`}>
+              <a href={`/login/${this.state.level}/${this.state.timeFinal}`}>
                 Submit score
               </a>
             </p>

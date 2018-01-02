@@ -8,6 +8,8 @@ import passport from "passport";
 import path from "path";
 import request from "request";
 import session from "express-session";
+
+const MemoryStore = require("session-memory-store")(session);
 const Strategy = require("passport-twitter").Strategy;
 
 let keys;
@@ -44,7 +46,10 @@ app.use(
   session({
     secret: keys.secret,
     resave: true,
-    saveUninitialized: true
+    saveUninitialized: true,
+    store: new MemoryStore({
+      expires: 60 * 60 * 24
+    })
   })
 );
 app.enable("trust proxy");
