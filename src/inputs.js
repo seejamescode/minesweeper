@@ -140,18 +140,15 @@ export const InputRange = styled.input`
 `;
 
 export const InputTab = styled.label`
+  box-sizing: border-box;
   background: ${props => (props.checked ? "#fff" : null)};
   color: ${props => (props.checked ? "#000" : null)};
-  display: ${props => (props.doNotDisplay ? "none" : null)};
-  flex: 1;
-  max-width: 8rem;
+  display: ${props => (props.doNotDisplay ? "none" : "flex")};
   padding: 0.5rem;
-
-  :nth-last-child(1) {
-    border-right: 0;
-  }
+  text-align: center;
 
   input {
+    margin: 0;
     visibility: hidden;
     width: 0;
   }

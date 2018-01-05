@@ -46,25 +46,16 @@ const Container = styled.div`
   display: grid;
   grid-template:
     "game info"
-    "game newGame"
-    / minmax(auto, 100vh) minmax(14.5rem, auto);
-  max-height: 100vh;
-
-  > * {
-    max-height: 100vh;
-  }
+    / minmax(auto, 100vh) minmax(25rem, auto);
+  height: 100vh;
+  width: 100vw;
 
   @media (orientation: portrait) {
     align-content: space-between;
     grid-template:
-      "info" 50vh
+      "info" 1fr
       "game" 50vh;
-    height: 100vh;
     overflow: hidden;
-
-    > * {
-      max-height: initial;
-    }
   }
 `;
 
@@ -82,42 +73,55 @@ const Game = styled.section`
   animation: ${props => (props.gameOver ? shake : null)} 0.82s
     cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
   backface-visibility: hidden;
-  display: flex;
   grid-area: game;
-  justify-content: center;
-  position: relative;
   perspective: 1000px;
   transform: translate3d(0, 0, 0);
+`;
+
+const GameFlex = styled.div`
+  @media (orientation: portrait) {
+    align-items: flex-end;
+    display: flex;
+    height: 100%;
+  }
+`;
+
+const GameSquare = styled.div`
+  animation: ${celebration} 6s ease infinite;
+  background: ${props =>
+    props.gameWon
+      ? "linear-gradient(230deg, #ee3490, #fbf007, #35fd0b, #0085fe, #9d3cd3, #ee3490, #fbf007, #35fd0b, #0085fe, #9d3cd3)"
+      : "white"};
+  background-size: 200% 200%;
+  border: 1px solid #fff;
+  margin: 0 auto;
+  max-height: 100%;
+  position: relative;
+  width: 100%;
 
   :after {
     content: "";
     display: block;
     padding-bottom: 100%;
   }
+
+  @media (orientation: portrait) {
+    max-width: 50vh;
+  }
 `;
 
-const Grid = styled.div`
-  animation: ${celebration} 6s ease infinite;
-  background: ${props =>
-    props.gameWon
-      ? "linear-gradient(230deg, #ee3490, #fbf007, #35fd0b, #0085fe, #9d3cd3, #ee3490, #fbf007, #35fd0b, #0085fe, #9d3cd3)"
-      : "white"};
-  background-size: 2000% 2000%;
-  border: 1px solid white;
-  box-sizing: border-box;
+const GameGrid = styled.div`
   display: grid;
-  font-size: ${props => 100 / props.level / 2}vh;
+  font-size: ${props => 25 / props.level}vw;
   grid-gap: 1px;
   grid-template-columns: repeat(${props => props.level}, 1fr);
-  grid-template-rows: repeat(${props => props.level}, 1fr);
-  max-width: 100vh;
+  grid-auto-rows: repeat(${props => props.level}, 1fr);
+  height: 100%;
   position: absolute;
   width: 100%;
 
   @media (orientation: portrait) {
-    font-size: ${props => 100 / props.level / 2}vw;
-    max-width: 100%;
-    width: 50vh;
+    font-size: ${props => 50 / props.level}vw;
   }
 `;
 
@@ -126,6 +130,7 @@ const Info = styled.div`
   display: flex;
   flex-direction: column;
   grid-area: info;
+  overflow-y: hidden;
 
   * {
     margin-top: 0;
@@ -141,15 +146,15 @@ const InfoHeader = styled.header`
 `;
 
 const InfoSection = styled.section`
+  box-sizing: border-box;
   display: ${props => (!props.show ? "none" : null)};
   grid-area: info-section;
   overflow-y: auto;
   padding: 1rem;
 
-  input,
   li,
   p {
-    max-width: 25rem;
+    width: 100%;
   }
 `;
 
@@ -415,39 +420,43 @@ export default class Minesweeper extends Component {
           </InfoSection>
         </Info>
         <Game gameOver={this.state.gameOver}>
-          <Grid gameWon={this.state.gameWon} level={this.state.level}>
-            {this.state.answers.map((row, rowIndex) =>
-              row.map(
-                (item, colIndex) =>
-                  item.revealed ||
-                  this.state.gameWon ||
-                  (this.state.gameOver && item.value === "X") ? (
-                    <Revealed
-                      key={`${rowIndex}-${colIndex}`}
-                      level={this.state.level}
-                      gameOver={this.state.gameOver}
-                      value={item.value}
-                    >
-                      <Content>
-                        {item.value === true ? "X" : item.value}
-                      </Content>
-                    </Revealed>
-                  ) : (
-                    <Button
-                      disabled={this.state.gameOver}
-                      key={`${rowIndex}-${colIndex}`}
-                      onClick={this.handleTurn}
-                      onContextMenu={this.handleTurn}
-                      value={[rowIndex, colIndex]}
-                    >
-                      <Content value={[rowIndex, colIndex]}>
-                        {item.flagged ? "!" : null}
-                      </Content>
-                    </Button>
+          <GameFlex>
+            <GameSquare gameWon={this.state.gameWon}>
+              <GameGrid level={this.state.level}>
+                {this.state.answers.map((row, rowIndex) =>
+                  row.map(
+                    (item, colIndex) =>
+                      item.revealed ||
+                      this.state.gameWon ||
+                      (this.state.gameOver && item.value === "X") ? (
+                        <Revealed
+                          key={`${rowIndex}-${colIndex}`}
+                          level={this.state.level}
+                          gameOver={this.state.gameOver}
+                          value={item.value}
+                        >
+                          <Content>
+                            {item.value === true ? "X" : item.value}
+                          </Content>
+                        </Revealed>
+                      ) : (
+                        <Button
+                          disabled={this.state.gameOver}
+                          key={`${rowIndex}-${colIndex}`}
+                          onClick={this.handleTurn}
+                          onContextMenu={this.handleTurn}
+                          value={[rowIndex, colIndex]}
+                        >
+                          <Content value={[rowIndex, colIndex]}>
+                            {item.flagged ? "!" : null}
+                          </Content>
+                        </Button>
+                      )
                   )
-              )
-            )}
-          </Grid>
+                )}
+              </GameGrid>
+            </GameSquare>
+          </GameFlex>
         </Game>
       </Container>
     );
