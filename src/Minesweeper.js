@@ -1,6 +1,11 @@
 import React, { Component } from "react";
 import styled, { injectGlobal } from "styled-components";
-import { getParameterByName, newGame, reveal } from "./functions";
+import {
+  getParameterByName,
+  isStorageAvailable,
+  newGame,
+  reveal
+} from "./functions";
 import {
   InputButton,
   InputButtonInline,
@@ -196,6 +201,7 @@ export default class Minesweeper extends Component {
   componentDidMount() {
     this.timer = setInterval(this.tick, 1000);
     let submittedFor = getParameterByName("submittedFor");
+    window.history.pushState(null, "", window.location.href.split("?")[0]);
     if (submittedFor !== null) {
       submittedFor = parseInt(submittedFor, 10);
       this.setState({
@@ -206,6 +212,20 @@ export default class Minesweeper extends Component {
         tab: 2,
         totalMines: Math.ceil(Math.pow(submittedFor, 2) / 8)
       });
+    } else if (
+      isStorageAvailable("localStorage") &&
+      localStorage.getItem("storedState") !== null
+    ) {
+      this.setState({
+        ...this.state,
+        ...JSON.parse(localStorage.getItem("storedState"))
+      });
+    }
+  }
+
+  componentDidUpdate() {
+    if (isStorageAvailable("localStorage")) {
+      localStorage.setItem("storedState", JSON.stringify(this.state));
     }
   }
 
