@@ -144,7 +144,7 @@ export const InputTab = styled.label`
   background: ${props => (props.checked ? "#fff" : null)};
   color: ${props => (props.checked ? "#000" : null)};
   display: ${props => (props.doNotDisplay ? "none" : "flex")};
-  padding: 0.5rem;
+  padding: 0.5rem 1rem;
   text-align: center;
 
   input {

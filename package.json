@@ -1,6 +1,7 @@
 {
   "name": "minesweeper",
-  "description": "Your favorite Minesweeper game made as a progressive web app with CSS Grid, React, and a Twitter-powered scoreboard.",
+  "description":
+    "Your favorite Minesweeper game made as a progressive web app with CSS Grid, React, and a Twitter-powered scoreboard.",
   "homepage": "https://minesweeper.now.sh",
   "license": "MIT",
   "version": "1.0.0",
@@ -32,7 +33,7 @@
   },
   "proxy": {
     "/": {
-      "target": "http://192.168.0.12:8081",
+      "target": "http://9.24.11.4:8081",
       "pathRewrite": {
         "^/proxy": ""
       },
@@ -40,16 +41,16 @@
     }
   },
   "scripts": {
-    "build": "react-app-rewired build && cp ./.env.prod.json ./build && NODE_ENV=production npx babel --out-file ./build/server.js < ./src/server.js --presets=env",
-    "deploy": "yarn build && now -e NODE_ENV=\"production\" && now alias && now scale minesweeper.now.sh 1 1",
+    "build":
+      "react-app-rewired build && cp ./.env.prod.json ./build && NODE_ENV=production npx babel --out-file ./build/server.js < ./src/server.js --presets=env",
+    "deploy":
+      "yarn build && now -e NODE_ENV=\"production\" && now alias && now scale minesweeper.now.sh 1 1",
     "now-build": "true",
     "now-start": "PORT=8081 NODE_ENV=production node build/server.js",
     "server": "PORT=8081 babel-watch ./src/server.js",
     "start": "concurrently \"react-scripts start\" \"yarn server\""
   },
   "babel": {
-    "presets": [
-      "env"
-    ]
+    "presets": ["env"]
   }
 }

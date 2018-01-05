@@ -46,7 +46,7 @@ const Container = styled.div`
   display: grid;
   grid-template:
     "game info"
-    / minmax(auto, 100vh) minmax(25rem, auto);
+    / minmax(auto, 100vh) 25rem;
   height: 100vh;
   width: 100vw;
 
