@@ -8,7 +8,8 @@
   <meta name="description" content="The best Minesweeper game for all devices, free, with offline-play and progress saving. Can you make the scoreboard?">
   <meta property="og:title" content="Minesweeper">
   <meta property="og:description" content="The best Minesweeper game for all devices, free, with offline-play and progress saving. Can you make the scoreboard?">
-  <meta property="og:image" content="%PUBLIC_URL%/thumbnail.png">
+  <meta property="og:image" content="https://minesweeper.now.sh/thumbnail.png">
+  <meta property="og:type" content="game">
   <meta property="og:url" content="https://minesweeper.now.sh">
   <meta name="twitter:card" content="summary_large_image">
   <!--
@@ -29,10 +30,9 @@
   <title>Minesweeper</title>
 </head>
 
-<body>
+<body style="background: #000; color: #fff;">
   <noscript>
-    You need to enable JavaScript or update to a
-    <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/grid#Browser_compatibility">modern browser</a> to run this app.
+    You need to enable JavaScript to run this app.
   </noscript>
   <div id="root"></div>
   <!--
@@ -45,6 +45,30 @@
       To begin the development, run `npm start` or `yarn start`.
       To create a production bundle, use `npm run build` or `yarn build`.
     -->
+  <div class="support">
+    Please
+    <a href="https://updatemybrowser.org/">update</a> your browser.
+  </div>
+  <script>
+    if (CSS.supports("display", "grid")) {
+      document.body.classList.add('css-grid');
+    };
+  </script>
+  <style>
+    .support {
+      background: black;
+      bottom: 0;
+      left: 0;
+      padding: 2rem;
+      position: fixed;
+      top: 0;
+      right: 0;
+    }
+
+    .css-grid .support {
+      display: none;
+    }
+  </style>
 </body>
 
 </html>
