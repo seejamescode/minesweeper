@@ -1,3 +1,17 @@
+export function changeFavicon(img) {
+  var favicon = document.querySelector('link[rel="shortcut icon"]');
+
+  if (!favicon) {
+    favicon = document.createElement("link");
+    favicon.setAttribute("rel", "shortcut icon");
+    var head = document.querySelector("head");
+    head.appendChild(favicon);
+  }
+
+  favicon.setAttribute("type", "image/png");
+  favicon.setAttribute("href", img);
+}
+
 function getCell(matrix, y, x) {
   var NO_VALUE = null;
   var value, hasValue;

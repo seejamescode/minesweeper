@@ -11,6 +11,7 @@ export const InputButtonInline = styled.button`
   background: inherit;
   border: none;
   color: inherit;
+  display: ${props => (props.shouldNotDisplay ? "none" : null)};
   font: inherit;
   padding: 0;
   text-decoration: underline;

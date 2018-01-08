@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import styled, { injectGlobal } from "styled-components";
 import {
+  changeFavicon,
   getParameterByName,
   isStorageAvailable,
   newGame,
@@ -15,6 +16,9 @@ import {
 } from "./Inputs";
 import { celebration, shake } from "./keyframes";
 import Scores from "./Scores";
+
+const favicon = require("./favicon.ico");
+const faviconGameOver = require("./faviconGameOver.ico");
 
 injectGlobal`
   body {
@@ -216,6 +220,10 @@ export default class Minesweeper extends Component {
       isStorageAvailable("localStorage") &&
       localStorage.getItem("storedState") !== null
     ) {
+      console.log(
+        "found locally",
+        JSON.parse(localStorage.getItem("storedState"))
+      );
       this.setState({
         ...this.state,
         ...JSON.parse(localStorage.getItem("storedState"))
@@ -282,16 +290,12 @@ export default class Minesweeper extends Component {
           count = current.revealed ? count - 1 : count;
           if (current.revealed && current.value === "X") {
             clearInterval(this.timer);
+
+            changeFavicon(faviconGameOver);
+
             gameOver = {
               gameOver: true,
-              status: (
-                <React.Fragment>
-                  Game over.{" "}
-                  <InputButtonInline onClick={this.startGame}>
-                    Try again?
-                  </InputButtonInline>
-                </React.Fragment>
-              )
+              status: "Game over."
             };
           }
         }
@@ -318,6 +322,7 @@ export default class Minesweeper extends Component {
 
   startGame = e => {
     e.preventDefault();
+    changeFavicon(favicon);
     this.setState({
       ...this.props,
       answers: newGame(this.state.levelNew),
@@ -347,7 +352,13 @@ export default class Minesweeper extends Component {
                   : this.state.time}s
                 <br />
                 <br />
-                {this.state.status}
+                {this.state.status}{" "}
+                <InputButtonInline
+                  shouldNotDisplay={!this.state.gameOver}
+                  onClick={this.startGame}
+                >
+                  Try again?
+                </InputButtonInline>
               </p>
             </InfoHeader>
             <InputTabs>

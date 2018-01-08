@@ -33,7 +33,7 @@
   },
   "proxy": {
     "/": {
-      "target": "http://9.24.11.4:8081",
+      "target": "http://localhost:8081",
       "pathRewrite": {
         "^/proxy": ""
       },
