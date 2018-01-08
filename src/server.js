@@ -123,7 +123,7 @@ app.get("/scores/:level/:page", (req, res) => {
   );
 });
 
-app.get("/login/:level/:time/:answers", function(req, res, next) {
+app.get("/login/:level/:time", function(req, res, next) {
   req.session.state = req.params;
   passport.authenticate("twitter")(req, res, next);
 });
@@ -132,30 +132,17 @@ app.get(
   "/twitter/return",
   passport.authenticate("twitter", { failureRedirect: "/login" }),
   function(req, res) {
-    const rows = JSON.parse(decodeURI(req.session.state.answers));
-    let honestAnswers = true;
-    for (let row = 0; row < rows.length; row++) {
-      for (let cell = 0; cell < rows[row].length; cell++) {
-        if (!rows[row][cell].revealed && rows[row][cell].value !== "X") {
-          honestAnswers = false;
-        }
-      }
-    }
+    const newScore = new ScoreModel({
+      date: Date.now(),
+      level: parseInt(req.session.state.level),
+      name: req.user.username,
+      picture: req.user.photos[0].value,
+      time: parseInt(req.session.state.time)
+    });
+    newScore.save(function(err) {
+      if (err) return handleError(err);
+    });
 
-    if (honestAnswers) {
-      const newScore = new ScoreModel({
-        date: Date.now(),
-        level: parseInt(req.session.state.level),
-        name: req.user.username,
-        picture: req.user.photos[0].value,
-        time: parseInt(req.session.state.time)
-      });
-      newScore.save(function(err) {
-        if (err) return handleError(err);
-      });
-    } else {
-      console.log(`@${req.user.username} was trying to cheat.`);
-    }
     const redirect =
       req.headers.host === `localhost:${port}` ? `http://localhost:3000` : "/";
     res.redirect(`${redirect}?submittedFor=${req.session.state.level}`);

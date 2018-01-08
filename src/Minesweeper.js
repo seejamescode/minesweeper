@@ -272,6 +272,26 @@ export default class Minesweeper extends Component {
     });
   };
 
+  handleSubmit = () => {
+    const rows = this.state.answers;
+    let honestAnswers = true;
+    for (let row = 0; row < rows.length; row++) {
+      for (let cell = 0; cell < rows[row].length; cell++) {
+        if (!rows[row][cell].revealed && rows[row][cell].value !== "X") {
+          honestAnswers = false;
+        }
+      }
+    }
+
+    if (honestAnswers) {
+      window.location.href = `/login/${this.state.level}/${
+        this.state.timeFinal
+      }`;
+    } else {
+      this.setState({ status: "Stop cheating." });
+    }
+  };
+
   handleTurn = e => {
     e.preventDefault();
     const location = e.target
@@ -462,13 +482,9 @@ export default class Minesweeper extends Component {
               handle?
               <br />
               <br />
-              <a
-                href={`/login/${this.state.level}/${
-                  this.state.timeFinal
-                }/${encodeURI(JSON.stringify(this.state.answers))}`}
-              >
+              <InputButtonInline onClick={this.handleSubmit}>
                 Submit score
-              </a>
+              </InputButtonInline>
             </p>
           </InfoSection>
         </Info>
