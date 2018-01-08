@@ -314,8 +314,6 @@ export default class Minesweeper extends Component {
           current = answers[i][j];
           count = current.revealed ? count - 1 : count;
           if (current.revealed && current.value === "X") {
-            clearInterval(this.timer);
-
             changeFavicon(faviconGameOver);
             ReactGA.event({
               category: "Game",
@@ -324,14 +322,14 @@ export default class Minesweeper extends Component {
 
             gameOver = {
               gameOver: true,
-              status: "Game over."
+              status: "Game over.",
+              timeFinal: this.state.time
             };
           }
         }
       }
 
       if (count === 0 && gameOver.gameOver === undefined) {
-        clearInterval(this.timer);
         gameWon = {
           gameWon: true,
           tab: 3,
@@ -364,7 +362,6 @@ export default class Minesweeper extends Component {
       tab: this.state.tab === 3 ? 0 : this.state.tab,
       totalMines: Math.ceil(Math.pow(this.state.levelNew, 2) / 8)
     });
-    this.timer = setInterval(this.tick, 1000);
     ReactGA.event({
       category: "Game",
       action: "New game"
@@ -385,7 +382,7 @@ export default class Minesweeper extends Component {
               <p>
                 Level: {this.state.level} / Flags Left:{" "}
                 {this.state.totalMines - this.state.minesFlagged} / Score:{" "}
-                {this.state.timeFinal > 0
+                {this.state.gameOver || this.state.gameWon
                   ? this.state.timeFinal
                   : this.state.time}s
                 <br />
