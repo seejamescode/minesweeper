@@ -1,4 +1,5 @@
 import React, { Component } from "react";
+import ReactGA from "react-ga";
 import styled, { injectGlobal } from "styled-components";
 import {
   changeFavicon,
@@ -16,6 +17,9 @@ import {
 } from "./Inputs";
 import { celebration, shake } from "./keyframes";
 import Scores from "./Scores";
+
+ReactGA.initialize("UA-43808769-12");
+ReactGA.pageview(window.location.pathname + window.location.search);
 
 const favicon = require("./favicon.ico");
 const faviconGameOver = require("./faviconGameOver.ico");
@@ -216,6 +220,11 @@ export default class Minesweeper extends Component {
         tab: 2,
         totalMines: Math.ceil(Math.pow(submittedFor, 2) / 8)
       });
+      ReactGA.event({
+        category: "Game",
+        action: "Score posted",
+        value: submittedFor
+      });
     } else if (
       isStorageAvailable("localStorage") &&
       localStorage.getItem("storedState") !== null
@@ -288,6 +297,10 @@ export default class Minesweeper extends Component {
             clearInterval(this.timer);
 
             changeFavicon(faviconGameOver);
+            ReactGA.event({
+              category: "Game",
+              action: "Game over"
+            });
 
             gameOver = {
               gameOver: true,
@@ -305,6 +318,11 @@ export default class Minesweeper extends Component {
           status: "You won this one!",
           timeFinal: this.state.time
         };
+        ReactGA.event({
+          category: "Game",
+          action: "Game won",
+          value: this.state.time
+        });
       }
 
       this.setState({
@@ -327,6 +345,10 @@ export default class Minesweeper extends Component {
       totalMines: Math.ceil(Math.pow(this.state.levelNew, 2) / 8)
     });
     this.timer = setInterval(this.tick, 1000);
+    ReactGA.event({
+      category: "Game",
+      action: "New game"
+    });
   };
 
   tick = () => {
