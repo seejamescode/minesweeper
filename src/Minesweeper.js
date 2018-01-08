@@ -220,10 +220,6 @@ export default class Minesweeper extends Component {
       isStorageAvailable("localStorage") &&
       localStorage.getItem("storedState") !== null
     ) {
-      console.log(
-        "found locally",
-        JSON.parse(localStorage.getItem("storedState"))
-      );
       this.setState({
         ...this.state,
         ...JSON.parse(localStorage.getItem("storedState"))
@@ -444,7 +440,11 @@ export default class Minesweeper extends Component {
               handle?
               <br />
               <br />
-              <a href={`/login/${this.state.level}/${this.state.timeFinal}`}>
+              <a
+                href={`/login/${this.state.level}/${
+                  this.state.timeFinal
+                }/${encodeURI(JSON.stringify(this.state.answers))}`}
+              >
                 Submit score
               </a>
             </p>
