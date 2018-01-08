@@ -444,7 +444,7 @@ export default class Minesweeper extends Component {
                 max="50"
                 onChange={this.changeLevel}
                 type="range"
-                defaultValue={this.state.levelNew}
+                value={this.state.levelNew}
               />
             </label>
             <br />
